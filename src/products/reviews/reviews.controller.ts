@@ -4,6 +4,7 @@ import { catchError } from 'rxjs';
 import { NATS_SERVICE } from 'src/config/services';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 
 
 @Controller('reviews')
@@ -33,14 +34,22 @@ export class ReviewsController {
   }
 
   @Patch(':id')
-  updateReview() {
-    return this.client.send('reviews.update', {})
+  updateReview(
+    @Param('id') id: string,
+    @Body() updateReviewDto: UpdateReviewDto
+  ) {
+    return this.client.send('reviews.update', {
+      id,
+      ...updateReviewDto
+    })
       .pipe(catchError(error => { throw new RpcException(error) }));
   }
 
   @Delete(':id')
-  deleteReview() {
-    return this.client.send('reviews.delete', {})
+  deleteReview(
+    @Param('id') id: string
+  ) {
+    return this.client.send('reviews.delete', { id })
       .pipe(catchError(error => { throw new RpcException(error) }));
   }
 }
