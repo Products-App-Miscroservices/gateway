@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { NATS_SERVICE } from 'src/config/services';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { UpdateReactionDto } from './dto/update-reaction.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { User } from 'src/auth/decorators/user.decorator';
+import { CurrentUser } from 'src/auth/interfaces/current-user.interface';
 
 @Controller('reactions')
 export class ReactionsController {
@@ -30,6 +33,21 @@ export class ReactionsController {
     return this.client.send('reactions.create', createReactionDto
     ).pipe(catchError(error => { throw new RpcException(error) }));
   }
+
+  @UseGuards(AuthGuard)
+  @Get('/product/:id')
+  getUserReactions(
+    @Param('productId') productId: string,
+    @User() user: CurrentUser
+  ) {
+    const { id: authorId } = user;
+    return this.client.send('reactions.user.get', {
+      authorId,
+      productId
+    }).pipe(catchError(error => { throw new RpcException(error) }));
+  }
+
+  
 
   @Patch(':id')
   updateReaction(

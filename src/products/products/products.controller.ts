@@ -21,6 +21,14 @@ export class ProductsController {
       .pipe(catchError(error => { throw new RpcException(error) }));
   }
 
+  @Get(':id')
+  getProductById(
+    @Param('id') id: string
+  ) {
+    return this.client.send('products.get.product', { id })
+      .pipe(catchError(error => { throw new RpcException(error) }));
+  }
+
   @Post()
   createProduct(
     @Body() createProductDto: CreateProductDto

@@ -1,10 +1,14 @@
-import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError } from 'rxjs';
 import { NATS_SERVICE } from 'src/config/services';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { Token } from 'src/auth/decorators/token.decorator';
+import { User } from 'src/auth/decorators/user.decorator';
+import { CurrentUser } from 'src/auth/interfaces/current-user.interface';
 
 
 @Controller('reviews')
@@ -13,7 +17,7 @@ export class ReviewsController {
     @Inject(NATS_SERVICE) private readonly client: ClientProxy
   ) { }
 
-  @Get(':id')
+  @Get('/product/:id')
   getProductReviews(
     @Param('id') id: string,
     @Query() paginationDto: PaginationDto
@@ -22,6 +26,17 @@ export class ReviewsController {
       id,
       paginationDto
     })
+      .pipe(catchError(error => { throw new RpcException(error) }));
+  }
+
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  getProductById(
+    @Param('id') productId: string,
+    @User() user: CurrentUser
+  ) {
+
+    return this.client.send('reviews.get.review', { productId, authorId: user.id })
       .pipe(catchError(error => { throw new RpcException(error) }));
   }
 
