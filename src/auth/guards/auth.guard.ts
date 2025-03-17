@@ -19,32 +19,36 @@ import {
     ) {}
   
   
-  
     async canActivate(context: ExecutionContext): Promise<boolean> {
-  
       const request = context.switchToHttp().getRequest();
-      const token = this.extractTokenFromHeader(request);
+  
+      let token = this.extractTokenFromCookies(request);
+      token = token ? token : this.extractTokenFromHeader(request)
+
       if (!token) {
         throw new UnauthorizedException('Token not found');
       }
-      try {
   
-        const { user, token:newToken } = await firstValueFrom(
-          this.client.send('auth.verify.user', token)
+      try {
+        const { user, token: newToken } = await firstValueFrom(
+          this.client.send('auth.verify.user', token),
         );
-        
+  
         request['user'] = user;
         request['token'] = newToken;
-  
-  
       } catch {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Invalid token');
       }
+  
       return true;
     }
-  
+    
     private extractTokenFromHeader(request: Request): string | undefined {
       const [type, token] = request.headers.authorization?.split(' ') ?? [];
       return type === 'Bearer' ? token : undefined;
+    }
+
+    private extractTokenFromCookies(request: Request): string | undefined {
+      return request.cookies?.Authentication;
     }
   }

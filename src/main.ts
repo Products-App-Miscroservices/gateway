@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { envs } from './config/envs';
 import { RpcCustomExceptionFilter } from './common/exceptions/rpc-custom-exception.filter';
+import * as cookieParser from 'cookie-parser';
 
 
 async function bootstrap() {
@@ -27,8 +28,10 @@ async function bootstrap() {
     new RpcCustomExceptionFilter()
   )
 
+  app.use(cookieParser());
+
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: 'http://192.168.192.1:3000',
     credentials: true
   })
 
