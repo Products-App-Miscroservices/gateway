@@ -29,6 +29,14 @@ export class ProductsController {
       .pipe(catchError(error => { throw new RpcException(error) }));
   }
 
+  @Get('/slug/:slug')
+  getProductBySlug(
+    @Param('slug') slug: string
+  ) {
+    return this.client.send('products.get.product.slug', { slug })
+      .pipe(catchError(error => { throw new RpcException(error) }));
+  }
+
   @Post()
   createProduct(
     @Body() createProductDto: CreateProductDto
